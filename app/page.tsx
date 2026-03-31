@@ -5,7 +5,7 @@ import { ChatSidebar } from '../src/components/ChatSidebar';
 import { ChatArea } from '../src/components/ChatArea';
 import { SettingsModal } from '../src/components/SettingsModal';
 import { useDatabase } from '../src/hooks/useDatabase';
-import { streamAIResponse } from '../src/lib/api';
+import { streamChat } from '../src/lib/chat';
 import { getApiKey } from '../src/lib/apiConfig';
 import { Message } from '../src/types';
 
@@ -54,6 +54,10 @@ export default function Home() {
     }
   };
 
+  const handleModelChange = (model: string) => {
+    setCurrentModel(model);
+  };
+
   const handleSendMessage = async (content: string) => {
     if (!selectedConversationId) return;
 
@@ -72,31 +76,14 @@ export default function Home() {
       });
     }
 
-    const apiKey = getApiKey(currentModel);
-    
-    if (!apiKey) {
-      setLoading(true);
-      setTimeout(() => {
-        const aiResponse = `请先在设置中配置 ${currentModel} 的 API 密钥，点击右上角的设置图标进行配置。`;
-        addMessage({
-          conversationId: selectedConversationId,
-          role: 'assistant',
-          content: aiResponse,
-        }).then(aiMessage => {
-          setMessages(prev => [...prev, aiMessage]);
-          setLoading(false);
-        });
-      }, 500);
-      return;
-    }
-
     setLoading(true);
 
     let aiContent = '';
-    await streamAIResponse({
-      model: currentModel as any,
-      prompt: content,
-      apiKey,
+    await streamChat({
+      model: currentModel,
+      messages: [
+        { role: 'user', content }
+      ],
       onChunk: (chunk) => {
         aiContent += chunk;
         setMessages(prev => {
@@ -121,7 +108,6 @@ export default function Home() {
       },
       onError: (error) => {
         console.error('API error:', error);
-        setLoading(false);
         if (aiContent) {
           addMessage({
             conversationId: selectedConversationId,
@@ -177,6 +163,8 @@ export default function Home() {
           messages={messages}
           onSendMessage={handleSendMessage}
           loading={loading}
+          currentModel={currentModel}
+          onModelChange={handleModelChange}
         />
       ) : (
         <div className="flex-1 flex items-center justify-center bg-white">

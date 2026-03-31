@@ -1,18 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Message } from '../types';
+import { Message, ModelType } from '../types';
 
 interface ChatAreaProps {
   messages: Message[];
   onSendMessage: (content: string) => void;
   loading: boolean;
+  currentModel: ModelType;
+  onModelChange: (model: ModelType) => void;
 }
 
 export const ChatArea: React.FC<ChatAreaProps> = ({
   messages,
   onSendMessage,
   loading,
+  currentModel,
+  onModelChange,
 }) => {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -35,6 +39,23 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
 
   return (
     <div className="flex-1 flex flex-col bg-white">
+      <div className="border-b border-gray-200 p-4 flex justify-between items-center">
+        <h2 className="text-lg font-medium text-gray-900">聊天</h2>
+        <div className="flex items-center space-x-4">
+          <span className="text-sm text-gray-600">模型:</span>
+          <select
+            value={currentModel}
+            onChange={(e) => onModelChange(e.target.value as ModelType)}
+            className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            disabled={loading}
+          >
+            <option value="openai">OpenAI (GPT-3.5)</option>
+            <option value="claude">Claude (Claude 3)</option>
+            <option value="gemini">Gemini (Gemini 1.0)</option>
+          </select>
+        </div>
+      </div>
+      
       <div className="flex-1 overflow-y-auto p-6">
         {messages.map((message) => (
           <div
