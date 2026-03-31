@@ -3,8 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { ChatSidebar } from '../src/components/ChatSidebar';
 import { ChatArea } from '../src/components/ChatArea';
+import { SettingsModal } from '../src/components/SettingsModal';
 import { useDatabase } from '../src/hooks/useDatabase';
 import { streamAIResponse } from '../src/lib/api';
+import { getApiKey } from '../src/lib/apiConfig';
 import { Message } from '../src/types';
 
 export default function Home() {
@@ -22,6 +24,7 @@ export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentModel, setCurrentModel] = useState('openai');
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
 
   useEffect(() => {
     if (selectedConversationId) {
@@ -69,26 +72,26 @@ export default function Home() {
       });
     }
 
+    const apiKey = getApiKey(currentModel);
+    
+    if (!apiKey) {
+      setLoading(true);
+      setTimeout(() => {
+        const aiResponse = `请先在设置中配置 ${currentModel} 的 API 密钥，点击右上角的设置图标进行配置。`;
+        addMessage({
+          conversationId: selectedConversationId,
+          role: 'assistant',
+          content: aiResponse,
+        }).then(aiMessage => {
+          setMessages(prev => [...prev, aiMessage]);
+          setLoading(false);
+        });
+      }, 500);
+      return;
+    }
+
     setLoading(true);
 
-    // 模拟AI响应（实际项目中应该调用真实的API）
-    setTimeout(() => {
-      const aiResponse = "这是一个模拟的AI回复。在实际项目中，这里会调用真实的API获取AI的响应。";
-      
-      addMessage({
-        conversationId: selectedConversationId,
-        role: 'assistant',
-        content: aiResponse,
-      }).then(aiMessage => {
-        setMessages(prev => [...prev, aiMessage]);
-        setLoading(false);
-      });
-    }, 1000);
-
-    // 实际API调用示例（需要配置API密钥）
-    /*
-    const apiKey = 'YOUR_API_KEY'; // 实际项目中应该从环境变量或用户输入获取
-    
     let aiContent = '';
     await streamAIResponse({
       model: currentModel as any,
@@ -96,11 +99,51 @@ export default function Home() {
       apiKey,
       onChunk: (chunk) => {
         aiContent += chunk;
-        // 可以在这里实现实时更新UI
+        setMessages(prev => {
+          const lastMessage = prev[prev.length - 1];
+          if (lastMessage && lastMessage.role === 'assistant' && !lastMessage.id) {
+            const updatedMessages = [...prev];
+            updatedMessages[updatedMessages.length - 1] = {
+              ...lastMessage,
+              content: aiContent,
+            };
+            return updatedMessages;
+          } else {
+            return [...prev, {
+              id: '',
+              conversationId: selectedConversationId,
+              role: 'assistant',
+              content: aiContent,
+              createdAt: Date.now(),
+            }];
+          }
+        });
       },
       onError: (error) => {
         console.error('API error:', error);
         setLoading(false);
+        if (aiContent) {
+          addMessage({
+            conversationId: selectedConversationId,
+            role: 'assistant',
+            content: aiContent || `API 调用失败: ${error.message}`,
+          }).then(aiMessage => {
+            setMessages(prev => {
+              const filtered = prev.filter(m => m.id);
+              return [...filtered, aiMessage];
+            });
+            setLoading(false);
+          });
+        } else {
+          addMessage({
+            conversationId: selectedConversationId,
+            role: 'assistant',
+            content: `API 调用失败: ${error.message}`,
+          }).then(aiMessage => {
+            setMessages(prev => [...prev, aiMessage]);
+            setLoading(false);
+          });
+        }
       },
       onComplete: async () => {
         await addMessage({
@@ -108,12 +151,14 @@ export default function Home() {
           role: 'assistant',
           content: aiContent,
         }).then(aiMessage => {
-          setMessages(prev => [...prev, aiMessage]);
+          setMessages(prev => {
+            const filtered = prev.filter(m => m.id);
+            return [...filtered, aiMessage];
+          });
           setLoading(false);
         });
       },
     });
-    */
   };
 
   return (
@@ -124,6 +169,7 @@ export default function Home() {
         onSelectConversation={handleSelectConversation}
         onCreateConversation={handleCreateConversation}
         onDeleteConversation={handleDeleteConversation}
+        onOpenSettings={() => setSettingsModalOpen(true)}
       />
       
       {selectedConversationId ? (
@@ -140,6 +186,11 @@ export default function Home() {
           </div>
         </div>
       )}
+      
+      <SettingsModal
+        isOpen={settingsModalOpen}
+        onClose={() => setSettingsModalOpen(false)}
+      />
     </div>
   );
 }

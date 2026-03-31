@@ -7,6 +7,7 @@ interface ChatSidebarProps {
   onSelectConversation: (id: string) => void;
   onCreateConversation: () => void;
   onDeleteConversation: (id: string) => void;
+  onOpenSettings: () => void;
 }
 
 export const ChatSidebar: React.FC<ChatSidebarProps> = ({
@@ -15,12 +16,23 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
   onSelectConversation,
   onCreateConversation,
   onDeleteConversation,
+  onOpenSettings,
 }) => {
   return (
     <div className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col">
       <div className="p-4 border-b border-gray-200">
-        <h1 className="text-2xl font-semibold text-gray-900">予解</h1>
-        <p className="text-sm text-gray-500 mt-1">本地优先的AI聊天应用</p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">予解</h1>
+            <p className="text-sm text-gray-500 mt-1">本地优先的AI聊天应用</p>
+          </div>
+          <button
+            onClick={onOpenSettings}
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
+          >
+            ⚙️
+          </button>
+        </div>
       </div>
       
       <button
