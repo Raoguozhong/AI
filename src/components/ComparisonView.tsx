@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeHighlight from 'rehype-highlight';
+import 'prismjs/themes/prism.css';
+import { motion } from 'framer-motion';
 import { streamChat } from '../lib/chat';
 import { ModelType } from '../types';
 
@@ -109,7 +112,10 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({ prompt, modelA, 
           </div>
         )}
         <div className="flex-1 overflow-y-auto">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          <ReactMarkdown 
+            remarkPlugins={[remarkGfm]} 
+            rehypePlugins={[rehypeHighlight]}
+          >
             {responseA || (loadingA ? '' : '_无响应_')}
           </ReactMarkdown>
         </div>
@@ -133,7 +139,10 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({ prompt, modelA, 
           </div>
         )}
         <div className="flex-1 overflow-y-auto">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          <ReactMarkdown 
+            remarkPlugins={[remarkGfm]} 
+            rehypePlugins={[rehypeHighlight]}
+          >
             {responseB || (loadingB ? '' : '_无响应_')}
           </ReactMarkdown>
         </div>

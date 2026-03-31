@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeHighlight from 'rehype-highlight';
+import 'prismjs/themes/prism.css';
+import { motion } from 'framer-motion';
 import { Message, ModelType } from '../types';
 
 interface ChatAreaProps {
@@ -58,28 +61,42 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
       
       <div className="flex-1 overflow-y-auto p-6">
         {messages.map((message) => (
-          <div
+          <motion.div
             key={message.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
             className={`flex mb-6 ${
               message.role === 'user' ? 'justify-end' : 'justify-start'
             }`}
           >
-            <div
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.2 }}
               className={`max-w-3xl p-4 rounded-lg ${
                 message.role === 'user'
                   ? 'bg-indigo-50 text-gray-900'
                   : 'bg-gray-50 text-gray-900'
               }`}
             >
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              <ReactMarkdown 
+                remarkPlugins={[remarkGfm]} 
+                rehypePlugins={[rehypeHighlight]}
+              >
                 {message.content}
               </ReactMarkdown>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         ))}
         
         {loading && (
-          <div className="flex justify-start mb-6">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="flex justify-start mb-6"
+          >
             <div className="max-w-3xl p-4 rounded-lg bg-gray-50 text-gray-900">
               <div className="flex space-x-1">
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
@@ -87,7 +104,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
         
         <div ref={messagesEndRef} />
