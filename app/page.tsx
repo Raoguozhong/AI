@@ -24,7 +24,7 @@ export default function Home() {
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
-  const [currentModel, setCurrentModel] = useState('openai');
+  const [currentModel, setCurrentModel] = useState<ModelType>('openai');
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [isComparisonMode, setIsComparisonMode] = useState(false);
   const [comparisonModelA, setComparisonModelA] = useState<ModelType>('openai');
